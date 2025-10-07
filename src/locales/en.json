@@ -1,0 +1,117 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "notFound": "Not found",
+    "back": "Back",
+    "search": "Search",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close"
+  },
+  "navigation": {
+    "home": "Home",
+    "items": "Items",
+    "traders": "Traders",
+    "maps": "Maps",
+    "tasks": "Tasks",
+    "hideout": "Hideout"
+  },
+  "home": {
+    "title": "Tarkov Wiki",
+    "description": "Comprehensive information site for Escape from Tarkov. Get detailed information about items, traders, maps, and tasks.",
+    "features": {
+      "items": {
+        "title": "Items",
+        "description": "Search and browse all item information including weapons, armor, and medical supplies."
+      },
+      "traders": {
+        "title": "Traders",
+        "description": "Check trading information, barters, and level requirements for each trader."
+      },
+      "maps": {
+        "title": "Maps",
+        "description": "Get detailed map information, spawn points, and route information."
+      },
+      "tasks": {
+        "title": "Tasks",
+        "description": "Check all task information, requirements, and rewards to progress efficiently."
+      }
+    },
+    "stats": {
+      "title": "Site Information",
+      "multilang": {
+        "title": "Multi-language",
+        "description": "Support for multiple languages including Japanese and English"
+      },
+      "realtime": {
+        "title": "Real-time",
+        "description": "Always updated with the latest game information"
+      },
+      "search": {
+        "title": "Search",
+        "description": "Advanced search and filtering capabilities"
+      }
+    }
+  },
+  "items": {
+    "title": "Items",
+    "description": "Search and browse all item information from Escape from Tarkov.",
+    "notFound": "No items found.",
+    "basePrice": "Base Price",
+    "fleaMarketFee": "Flea Market Fee",
+    "weight": "Weight",
+    "size": "Size",
+    "types": "Types",
+    "sellPrice": "Sell Price",
+    "buyPrice": "Buy Price",
+    "containsItems": "Contains Items",
+    "usedInTasks": "Used in Tasks"
+  },
+  "traders": {
+    "title": "Traders",
+    "description": "Check trading information, barters, and level requirements for each trader.",
+    "notFound": "No traders found.",
+    "currency": "Currency",
+    "levels": "Levels",
+    "level": "Level",
+    "requiredPlayerLevel": "Required Player Level",
+    "requiredReputation": "Required Reputation",
+    "payRate": "Pay Rate",
+    "barters": "Barters",
+    "requiredItems": "Required Items",
+    "rewardItems": "Reward Items",
+    "cashOffers": "Cash Offers"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "description": "Check all task information, requirements, and rewards to progress efficiently.",
+    "notFound": "No tasks found.",
+    "trader": "Trader",
+    "map": "Map",
+    "experience": "Experience",
+    "objectives": "Objectives",
+    "optional": "Optional",
+    "startRewards": "Start Rewards",
+    "finishRewards": "Finish Rewards",
+    "traderStanding": "Trader Standing"
+  },
+  "search": {
+    "placeholder": "Search items, tasks, traders...",
+    "noResults": "No results found",
+    "results": "Search Results"
+  },
+  "auth": {
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "signout": "Sign Out",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "networkError": "Network error occurred"
+  }
+}

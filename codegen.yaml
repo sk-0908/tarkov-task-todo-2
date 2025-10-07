@@ -1,0 +1,24 @@
+schema: https://api.tarkov.dev/graphql
+documents: "src/graphql/**/*.graphql"
+generates:
+  src/graphql/generated.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typed-document-node"
+    config:
+      useTypeImports: true
+      skipTypename: false
+      enumsAsTypes: true
+      maybeValue: T | null | undefined
+      inputMaybeValue: T | null | undefined
+      avoidOptionals: false
+      dedupeOperationSuffix: true
+      documentMode: documentNode
+      strictScalars: true
+      scalars:
+        DateTime: string
+        JSON: Record<string, any>
+        Upload: File
+
+

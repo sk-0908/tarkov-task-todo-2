@@ -1,0 +1,76 @@
+query GetItems($lang: LanguageCode!) {
+  items(lang: $lang) {
+    id
+    name
+    shortName
+    description
+    basePrice
+    fleaMarketFee
+    iconLink
+    gridImageLink
+    baseImageLink
+    inspectImageLink
+    image512pxLink
+    image8xLink
+    wikiLink
+    avg24hPrice
+    types
+    weight
+    width
+    height
+  }
+}
+
+query GetItem($id: ID!, $lang: LanguageCode!) {
+  item(id: $id, lang: $lang) {
+    id
+    name
+    shortName
+    description
+    basePrice
+    fleaMarketFee
+    iconLink
+    gridImageLink
+    baseImageLink
+    inspectImageLink
+    image512pxLink
+    image8xLink
+    wikiLink
+    avg24hPrice
+    types
+    weight
+    width
+    height
+    sellFor {
+      price
+      currency
+      vendor {
+        name
+      }
+    }
+    buyFor {
+      price
+      currency
+      vendor {
+        name
+      }
+    }
+    containsItems {
+      item {
+        id
+        name
+        shortName
+        iconLink
+      }
+      count
+      quantity
+    }
+    usedInTasks {
+      id
+      name
+      trader {
+        name
+      }
+    }
+  }
+}

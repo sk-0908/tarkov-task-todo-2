@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sessions Session[]
+  
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Cache {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("cache")
+}
+
+model SearchIndex {
+  id        String   @id @default(cuid())
+  docId     String   // 元のアイテム/タスク/トレーダーID
+  kind      String   // 'item' | 'task' | 'trader' | 'map'
+  name      String   // メイン名
+  altNames  String?  // 別名（JSON配列）
+  trader    String?  // トレーダー名（タスクの場合）
+  map       String?  // マップ名（タスクの場合）
+  content   String?  // 追加の検索対象テキスト
+  language  String   // 'ja' | 'en'
+  metadata  String?  // 追加メタデータ（JSON）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("search_index")
+  @@unique([docId, kind, language], name: "docId_kind_language")
+  @@index([kind])
+  @@index([language])
+  @@index([docId, kind])
+}

@@ -1,0 +1,301 @@
+query GetTasks($lang: LanguageCode!) {
+  tasks(lang: $lang) {
+    id
+    tarkovDataId
+    name
+    normalizedName
+    trader {
+      id
+      name
+    }
+    map {
+      id
+      name
+    }
+    experience
+    wikiLink
+    taskImageLink
+    minPlayerLevel
+    availableDelaySecondsMin
+    availableDelaySecondsMax
+    restartable
+    factionName
+    kappaRequired
+    lightkeeperRequired
+    descriptionMessageId
+    startMessageId
+    successMessageId
+    failMessageId
+    taskRequirements {
+      task {
+        id
+        name
+      }
+    }
+    traderRequirements {
+      trader {
+        id
+        name
+      }
+      requirementType
+      compareMethod
+      value
+    }
+    objectives {
+      id
+      type
+      description
+      maps {
+        id
+        name
+      }
+      optional
+    }
+    startRewards {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      offerUnlock {
+        id
+        trader {
+          id
+          name
+        }
+        level
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+      }
+    }
+    finishRewards {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      offerUnlock {
+        id
+        trader {
+          id
+          name
+        }
+        level
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+      }
+    }
+    failConditions {
+      id
+      type
+      description
+      maps {
+        id
+        name
+      }
+      optional
+    }
+    failureOutcome {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+    }
+  }
+}
+
+query GetTask($id: ID!, $lang: LanguageCode!) {
+  task(id: $id, lang: $lang) {
+    id
+    tarkovDataId
+    name
+    normalizedName
+    trader {
+      id
+      name
+    }
+    map {
+      id
+      name
+    }
+    experience
+    wikiLink
+    taskImageLink
+    minPlayerLevel
+    availableDelaySecondsMin
+    availableDelaySecondsMax
+    restartable
+    factionName
+    kappaRequired
+    lightkeeperRequired
+    descriptionMessageId
+    startMessageId
+    successMessageId
+    failMessageId
+    taskRequirements {
+      task {
+        id
+        name
+      }
+    }
+    traderRequirements {
+      trader {
+        id
+        name
+      }
+      requirementType
+      compareMethod
+      value
+    }
+    objectives {
+      id
+      type
+      description
+      maps {
+        id
+        name
+      }
+      optional
+    }
+    startRewards {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      offerUnlock {
+        id
+        trader {
+          id
+          name
+        }
+        level
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+      }
+    }
+    finishRewards {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      offerUnlock {
+        id
+        trader {
+          id
+          name
+        }
+        level
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+      }
+    }
+    failConditions {
+      id
+      type
+      description
+      maps {
+        id
+        name
+      }
+      optional
+    }
+    failureOutcome {
+      traderStanding {
+        trader {
+          id
+          name
+        }
+        standing
+      }
+      items {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+    }
+  }
+}

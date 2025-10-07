@@ -1,0 +1,161 @@
+query GetTraders($lang: LanguageCode!) {
+  traders(lang: $lang) {
+    id
+    name
+    normalizedName
+    description
+    resetTime
+    currency {
+      id
+      name
+      shortName
+      iconLink
+    }
+    discount
+    imageLink
+    image4xLink
+    tarkovDataId
+    levels {
+      id
+      level
+      requiredPlayerLevel
+      requiredReputation
+      requiredCommerce
+      payRate
+      insuranceRate
+      repairCostMultiplier
+      imageLink
+      image4xLink
+    }
+    barters {
+      id
+      level
+      taskUnlock {
+        id
+        name
+      }
+      requiredItems {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      rewardItems {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      buyLimit
+    }
+    cashOffers {
+      id
+      minTraderLevel
+      price
+      currency
+      priceRUB
+      taskUnlock {
+        id
+        name
+      }
+      buyLimit
+      item {
+        id
+        name
+        shortName
+        iconLink
+        basePrice
+        types
+      }
+    }
+  }
+}
+
+query GetTrader($id: ID!, $lang: LanguageCode!) {
+  trader(id: $id, lang: $lang) {
+    id
+    name
+    normalizedName
+    description
+    resetTime
+    currency {
+      id
+      name
+      shortName
+      iconLink
+    }
+    discount
+    imageLink
+    image4xLink
+    tarkovDataId
+    levels {
+      id
+      level
+      requiredPlayerLevel
+      requiredReputation
+      requiredCommerce
+      payRate
+      insuranceRate
+      repairCostMultiplier
+      imageLink
+      image4xLink
+    }
+    barters {
+      id
+      level
+      taskUnlock {
+        id
+        name
+      }
+      requiredItems {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      rewardItems {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        count
+        quantity
+      }
+      buyLimit
+    }
+    cashOffers {
+      id
+      minTraderLevel
+      price
+      currency
+      priceRUB
+      taskUnlock {
+        id
+        name
+      }
+      buyLimit
+      item {
+        id
+        name
+        shortName
+        iconLink
+        basePrice
+        types
+      }
+    }
+  }
+}
