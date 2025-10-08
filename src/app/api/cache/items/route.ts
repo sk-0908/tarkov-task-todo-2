@@ -5,11 +5,18 @@ import { revalidateTag } from 'next/cache'
 interface CachedItem {
   id: string;
   name: string;
+  shortName?: string;
   basePrice: number;
+  avg24hPrice?: number;
   fleaMarketFee: number;
   iconLink: string;
+  gridImageLink?: string;
+  image512pxLink?: string;
   types: string[];
   wikiLink: string;
+  weight?: number;
+  width?: number;
+  height?: number;
   language: string;
   cachedAt: Date;
 }
@@ -55,11 +62,19 @@ export async function GET(request: NextRequest) {
           items(lang: ${language}) { 
             id 
             name 
+            shortName
+            description
             basePrice 
+            avg24hPrice
             fleaMarketFee
-            iconLink 
+            iconLink
+            gridImageLink
+            image512pxLink
             types 
             wikiLink 
+            weight
+            width
+            height
           } 
         }` 
       }),
