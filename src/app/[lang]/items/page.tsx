@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import ItemsControls from "@/components/ItemsControls";
 import { supportedLanguages, t, getLanguagePath } from "@/lib/i18n";
 import { headers } from "next/headers";
+import { getJapaneseWikiUrlByName } from "@/lib/wiki-map";
 
 export const revalidate = 600;
 
@@ -24,7 +25,7 @@ interface Item {
   height?: number;
 }
 
-async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
+async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[] }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
   // Derive base URL from request headers to avoid env drift/timeouts
   const h = headers();
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
@@ -41,7 +42,11 @@ async function fetchItems(language: string, params: { q?: string; sort?: string;
     ...(params.sort ? { sort: params.sort } : {}),
     ...(params.order ? { order: params.order } : {}),
   }).toString();
-  const res = await fetch(`${baseUrl}/api/cache/items?${qs}`, {
+  const url = new URL(`${baseUrl}/api/cache/items?${qs}`);
+  if (params.types && params.types.length > 0) {
+    for (const tp of params.types) url.searchParams.append('types', tp);
+  }
+  const res = await fetch(url.toString(), {
     next: { revalidate: 600, tags: [`items:${language}`] },
   });
   if (!res.ok) throw new Error(`Failed to fetch items: ${res.status}`);
@@ -60,8 +65,8 @@ function ItemListSkeleton() {
 function ItemRow({ item, lang }: { item: Item; lang: string }) {
   const size = item.width && item.height ? `${item.width}×${item.height}` : "-";
   const wiki = item.wikiLink || '';
-  // 日本語Wikiは公式の Fandom ではなく wikiwiki.jp/eft を案内
-  const jaWiki: string | null = lang === 'ja' ? 'https://wikiwiki.jp/eft/' : null;
+  // 日本語Wikiは wikiwiki.jp/eft の対応ページを辞書で引き、未登録ならトップへ
+  const jaWiki: string | null = lang === 'ja' ? (getJapaneseWikiUrlByName(item.name) || 'https://wikiwiki.jp/eft/') : null;
   return (
     <tr className="border-b hover:bg-gray-50">
       <td className="p-2">
@@ -99,8 +104,8 @@ function ItemRow({ item, lang }: { item: Item; lang: string }) {
   );
 }
 
-async function ItemTable({ lang, q, sort, order, page, pageSize }: { lang: string; q?: string; sort?: string; order?: string; page?: number; pageSize?: number }) {
-  const { data: items, total, limit, offset } = await fetchItems(lang, { q, sort, order, page, pageSize });
+async function ItemTable({ lang, q, sort, order, page, pageSize, types }: { lang: string; q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[] }) {
+  const { data: items, total, limit, offset } = await fetchItems(lang, { q, sort, order, page, pageSize, types });
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-8">
@@ -167,6 +172,9 @@ export default function ItemsPage({ params, searchParams }: ItemsPageProps) {
   const order = typeof searchParams.order === 'string' ? searchParams.order : undefined;
   const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page, 10) : undefined;
   const pageSize = typeof searchParams.pageSize === 'string' ? parseInt(searchParams.pageSize, 10) : undefined;
+  const types = Array.isArray(searchParams.types)
+    ? (searchParams.types as string[])
+    : (typeof searchParams.types === 'string' ? [searchParams.types] : []);
 
   return (
     <>
@@ -179,7 +187,7 @@ export default function ItemsPage({ params, searchParams }: ItemsPageProps) {
           </div>
           <ItemsControls lang={lang} />
           <Suspense fallback={<ItemListSkeleton />}>
-            <ItemTable lang={lang} q={q} sort={sort} order={order} page={page} pageSize={pageSize} />
+            <ItemTable lang={lang} q={q} sort={sort} order={order} page={page} pageSize={pageSize} types={types} />
           </Suspense>
         </div>
       </main>

@@ -35,6 +35,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const q = (searchParams.get('q') || '').trim();
+    const typesParams = searchParams.getAll('types');
+    const typesCsv = searchParams.get('types');
+    const typesFilter = (typesParams.length > 0
+      ? typesParams
+      : (typesCsv ? typesCsv.split(',') : [])
+    ).map((s) => s.trim().toLowerCase()).filter(Boolean);
     const sort = (searchParams.get('sort') || 'name').toLowerCase();
     const order = (searchParams.get('order') || 'asc').toLowerCase();
     const cacheKey = getCacheKey('items', 'list', language);
@@ -67,6 +73,11 @@ export async function GET(request: NextRequest) {
             .toLowerCase();
           return hay.includes(qLower);
         });
+      }
+
+      // Types filter (OR match)
+      if (typesFilter.length > 0) {
+        items = items.filter((it) => Array.isArray(it.types) && it.types.some((t: string) => typesFilter.includes(String(t).toLowerCase())));
       }
 
       // Sorting
@@ -108,6 +119,7 @@ export async function GET(request: NextRequest) {
         sort,
         order,
         query: q,
+        types: typesFilter,
         cached: true,
         cachedAt: cachedData.createdAt,
         cacheSource: 'database'
@@ -185,6 +197,7 @@ export async function GET(request: NextRequest) {
       sort,
       order,
       query: q,
+      types: typesFilter,
       cached: false,
       cachedAt: new Date(),
       cacheSource: 'external'
