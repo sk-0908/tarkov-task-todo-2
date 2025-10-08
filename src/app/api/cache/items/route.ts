@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const language = searchParams.get('lang') || 'ja';
+    const limit = parseInt(searchParams.get('limit') || '0', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const cacheKey = getCacheKey('items', 'list', language);
     
     // DBキャッシュからデータを取得（源泉キャッシュ）
@@ -63,13 +65,10 @@ export async function GET(request: NextRequest) {
             id 
             name 
             shortName
-            description
             basePrice 
             avg24hPrice
             fleaMarketFee
             iconLink
-            gridImageLink
-            image512pxLink
             types 
             wikiLink 
             weight
@@ -113,8 +112,10 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    const sliced = limit > 0 ? items.slice(offset, offset + limit) : items;
+
     return NextResponse.json({
-      data: items,
+      data: sliced,
       cached: false,
       cachedAt: new Date(),
       cacheSource: 'external'

@@ -24,7 +24,7 @@ interface Item {
 
 async function fetchItems(language: string): Promise<Item[]> {
   const baseUrl = process.env.APP_URL || process.env.VERCEL_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/cache/items?lang=${language}`, {
+  const res = await fetch(`${baseUrl}/api/cache/items?lang=${language}&limit=200`, {
     next: { revalidate: 600, tags: [`items:${language}`] },
   });
   if (!res.ok) throw new Error(`Failed to fetch items: ${res.status}`);
@@ -134,4 +134,3 @@ export default function ItemsPage({ params }: ItemsPageProps) {
     </>
   );
 }
-
