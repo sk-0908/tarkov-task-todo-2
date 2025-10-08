@@ -59,6 +59,9 @@ function ItemListSkeleton() {
 
 function ItemRow({ item, lang }: { item: Item; lang: string }) {
   const size = item.width && item.height ? `${item.width}×${item.height}` : "-";
+  const wiki = item.wikiLink || '';
+  // 日本語Wikiは公式の Fandom ではなく wikiwiki.jp/eft を案内
+  const jaWiki: string | null = lang === 'ja' ? 'https://wikiwiki.jp/eft/' : null;
   return (
     <tr className="border-b hover:bg-gray-50">
       <td className="p-2">
@@ -81,10 +84,13 @@ function ItemRow({ item, lang }: { item: Item; lang: string }) {
       <td className="p-2 text-right">{item.weight ?? "-"}</td>
       <td className="p-2 text-center">{size}</td>
       <td className="p-2 text-center">
-        {item.wikiLink ? (
-          <a href={item.wikiLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-            Wiki
-          </a>
+        {wiki ? (
+          <div className="flex items-center justify-center gap-2">
+            <a href={wiki} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Wiki</a>
+            {jaWiki && (
+              <a href={jaWiki} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">日本語</a>
+            )}
+          </div>
         ) : (
           "-"
         )}
@@ -139,22 +145,16 @@ async function ItemTable({ lang, q, sort, order, page, pageSize }: { lang: strin
   );
 }
 
-function PaginationLink({ lang, label, page, disabled }: { lang: string; label: string; page: number; disabled?: boolean }) {
+function PaginationLink({ lang, label, page, disabled, q, sort, order, pageSize }: { lang: string; label: string; page: number; disabled?: boolean; q?: string; sort?: string; order?: string; pageSize?: number }) {
   const params = new URLSearchParams();
-  if (typeof window !== 'undefined') {
-    const sp = new URLSearchParams(window.location.search);
-    sp.forEach((v, k) => params.set(k, v));
-  }
+  if (q) params.set('q', q);
+  if (sort) params.set('sort', sort);
+  if (order) params.set('order', order);
+  if (pageSize) params.set('pageSize', String(pageSize));
   params.set('page', String(page));
-  const href = getLanguagePath(lang, `items`) + `?${params.toString()}`;
-  if (disabled) {
-    return <span className="px-3 py-1 rounded bg-gray-100 text-gray-400 cursor-not-allowed">{label}</span>;
-  }
-  return (
-    <Link href={href} className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">
-      {label}
-    </Link>
-  );
+  const href = getLanguagePath(lang, 'items') + `?${params.toString()}`;
+  if (disabled) return <span className="px-3 py-1 rounded bg-gray-100 text-gray-400 cursor-not-allowed">{label}</span>;
+  return <Link href={href} className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">{label}</Link>;
 }
 
 interface ItemsPageProps { params: { lang: string }, searchParams: { [key: string]: string | string[] | undefined } }

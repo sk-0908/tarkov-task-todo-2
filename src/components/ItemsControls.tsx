@@ -61,6 +61,7 @@ export default function ItemsControls({ lang }: Props) {
           <option value="avg24hprice">Avg 24h</option>
           <option value="weight">Weight</option>
           <option value="size">Size</option>
+          <option value="types">Types</option>
         </select>
         <select
           value={order}
@@ -85,4 +86,3 @@ export default function ItemsControls({ lang }: Props) {
     </div>
   );
 }
-

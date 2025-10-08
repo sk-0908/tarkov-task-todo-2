@@ -82,6 +82,8 @@ export async function GET(request: NextRequest) {
               return x.weight ?? 0;
             case 'size':
               return (x.width ?? 0) * (x.height ?? 0);
+            case 'types':
+              return (Array.isArray(x.types) ? x.types.join(' ') : '').toLowerCase();
             case 'name':
             default:
               return (x.name || '').toString().toLowerCase();

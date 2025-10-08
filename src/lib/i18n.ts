@@ -66,10 +66,9 @@ export function getLanguageFromPath(pathname: string): SupportedLanguage {
 
 // 言語パス生成関数
 export function getLanguagePath(lang: SupportedLanguage, path: string = ''): string {
-  if (lang === defaultLanguage) {
-    return path ? `/${path}` : '/';
-  }
-  return `/${lang}${path ? `/${path}` : ''}`;
+  // Always prefix with language for consistency (e.g., '/ja/items')
+  const clean = path.replace(/^\/+/, '');
+  return `/${lang}${clean ? `/${clean}` : ''}`;
 }
 
 // メタデータ生成用の言語別設定
@@ -88,9 +87,15 @@ export function getLanguageMetadata(lang: SupportedLanguage) {
 
 // 言語切り替え用のリンク生成
 export function getLanguageSwitchLinks(currentPath: string, currentLang: SupportedLanguage) {
+  // Normalize currentPath by removing an existing leading '/<lang>' segment if present
+  const segments = currentPath.split('?')[0].split('/').filter(Boolean);
+  const pathWithoutLang = segments.length > 0 && supportedLanguages.includes(segments[0] as any)
+    ? segments.slice(1).join('/')
+    : segments.join('/');
+
   return supportedLanguages.map(lang => ({
     lang,
-    href: getLanguagePath(lang, currentPath.replace(`/${currentLang}`, '')),
+    href: getLanguagePath(lang, pathWithoutLang),
     label: lang === 'ja' ? '日本語' : 'English',
   }));
 }
