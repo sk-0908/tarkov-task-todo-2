@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { getTypeLabel } from "@/lib/type-labels";
 
 interface Props {
   lang: string;
@@ -80,13 +81,14 @@ export default function ItemsControls({ lang }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
         {/* Types multi-select */}
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Types</label>
+          <label className="text-sm text-gray-600">{lang === 'ja' ? '種別' : 'Types'}</label>
           <div className="max-h-28 overflow-auto border rounded p-2 bg-white min-w-[200px]">
             {allTypes.length === 0 && (
               <div className="text-xs text-gray-500">Loading…</div>
             )}
             {allTypes.map((t) => {
               const checked = types.includes(t);
+              const label = getTypeLabel(t, lang as any);
               return (
                 <label key={t} className="block text-sm text-gray-700">
                   <input
@@ -99,36 +101,36 @@ export default function ItemsControls({ lang }: Props) {
                       updateTypes(next);
                     }}
                   />
-                  {t}
+                  {label}
                 </label>
               );
             })}
           </div>
-          <button className="text-xs text-gray-600 hover:text-gray-900" onClick={() => { setTypes([]); updateTypes([]); }}>Clear</button>
+          <button className="text-xs text-gray-600 hover:text-gray-900" onClick={() => { setTypes([]); updateTypes([]); }}>{lang === 'ja' ? 'クリア' : 'Clear'}</button>
         </div>
 
-        <label className="text-sm text-gray-600">Sort</label>
+        <label className="text-sm text-gray-600">{lang === 'ja' ? '並び替え' : 'Sort'}</label>
         <select
           value={sort}
           onChange={(e) => update({ sort: e.target.value })}
           className="border rounded px-2 py-1"
         >
-          <option value="name">Name</option>
-          <option value="baseprice">Base Price</option>
-          <option value="avg24hprice">Avg 24h</option>
-          <option value="weight">Weight</option>
-          <option value="size">Size</option>
-          <option value="types">Types</option>
+          <option value="name">{lang === 'ja' ? '名前' : 'Name'}</option>
+          <option value="baseprice">{lang === 'ja' ? '基礎価格' : 'Base Price'}</option>
+          <option value="avg24hprice">{lang === 'ja' ? '24時間平均価格' : 'Avg 24h'}</option>
+          <option value="weight">{lang === 'ja' ? '重量' : 'Weight'}</option>
+          <option value="size">{lang === 'ja' ? 'サイズ' : 'Size'}</option>
+          <option value="types">{lang === 'ja' ? '種別' : 'Types'}</option>
         </select>
         <select
           value={order}
           onChange={(e) => update({ order: e.target.value })}
           className="border rounded px-2 py-1"
         >
-          <option value="asc">Asc</option>
-          <option value="desc">Desc</option>
+          <option value="asc">{lang === 'ja' ? '昇順' : 'Asc'}</option>
+          <option value="desc">{lang === 'ja' ? '降順' : 'Desc'}</option>
         </select>
-        <label className="ml-3 text-sm text-gray-600">Page size</label>
+        <label className="ml-3 text-sm text-gray-600">{lang === 'ja' ? '件数/ページ' : 'Page size'}</label>
         <select
           value={String(pageSize)}
           onChange={(e) => update({ pageSize: parseInt(e.target.value, 10) })}
