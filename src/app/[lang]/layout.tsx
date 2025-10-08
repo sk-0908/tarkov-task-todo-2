@@ -32,11 +32,6 @@ export default function LanguageLayout({
     );
   }
 
-  return (
-    <html lang={lang} dir="ltr">
-      <body className="antialiased">
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+  // 注意: html/body タグはルートレイアウトのみで定義する
+  return <Providers>{children}</Providers>;
 }
