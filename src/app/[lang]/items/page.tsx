@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import ItemsControls from "@/components/ItemsControls";
 import { supportedLanguages, t, getLanguagePath } from "@/lib/i18n";
+import { headers } from "next/headers";
 
 export const revalidate = 600;
 
@@ -24,7 +25,11 @@ interface Item {
 }
 
 async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
-  const baseUrl = process.env.APP_URL || process.env.VERCEL_URL || "http://localhost:3000";
+  // Derive base URL from request headers to avoid env drift/timeouts
+  const h = headers();
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
+  const proto = h.get('x-forwarded-proto') || (process.env.VERCEL ? 'https' : 'http');
+  const baseUrl = `${proto}://${host}`;
   const page = params.page && params.page > 0 ? params.page : 1;
   const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 50;
   const offset = (page - 1) * pageSize;

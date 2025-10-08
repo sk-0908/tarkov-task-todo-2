@@ -113,6 +113,8 @@ export async function GET(request: NextRequest) {
     }
 
     // キャッシュが無効または存在しない場合、新しいデータを取得
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     const response = await fetch("https://api.tarkov.dev/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -134,7 +136,9 @@ export async function GET(request: NextRequest) {
           } 
         }` 
       }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       throw new Error(`GraphQL request failed: ${response.status}`);
@@ -186,15 +190,25 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Cache API error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch items',
-        code: 'FETCH_ERROR',
-        message: 'アイテムデータの取得に失敗しました',
-        retryAfter: 60
-      },
-      { status: 500 }
-    );
+    // stale fallback: return latest cached even if expired
+    try {
+      const { searchParams } = new URL(request.url);
+      const language = searchParams.get('lang') || 'ja';
+      const cacheKey = getCacheKey('items', 'list', language);
+      const stale = await prisma.cache.findFirst({ where: { key: cacheKey }, orderBy: { updatedAt: 'desc' } });
+      if (stale) {
+        const items: any[] = JSON.parse(stale.value) || [];
+        return NextResponse.json({
+          data: items,
+          total: items.length,
+          cached: true,
+          stale: true,
+          cachedAt: stale.updatedAt,
+          cacheSource: 'database'
+        });
+      }
+    } catch {}
+    return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 });
   }
 }
 
