@@ -17,6 +17,10 @@ interface CachedItem {
   weight?: number;
   width?: number;
   height?: number;
+  // Added label fields
+  categoryName?: string;
+  cheapestBuy?: { price: number; currency: string; vendorName: string } | null;
+  firstBarter?: { traderName: string; required: Array<{ name: string; count: number }> } | null;
   language: string;
   cachedAt: Date;
 }
@@ -159,6 +163,12 @@ export async function GET(request: NextRequest) {
             weight
             width
             height
+            category { name }
+            buyFor { price currency vendor { name } }
+            bartersFor {
+              trader { name }
+              requiredItems { item { name } count }
+            }
           } 
         }` 
       }),
@@ -176,7 +186,47 @@ export async function GET(request: NextRequest) {
       throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`);
     }
 
-    const items = json?.data?.items || [];
+    const items = (json?.data?.items || []).map((it: any) => {
+      // Compute cheapest buy offer
+      let cheapest: { price: number; currency: string; vendorName: string } | null = null;
+      if (Array.isArray(it.buyFor) && it.buyFor.length > 0) {
+        for (const o of it.buyFor) {
+          if (o && typeof o.price === 'number') {
+            if (!cheapest || o.price < cheapest.price) {
+              cheapest = { price: o.price, currency: o.currency || '', vendorName: o.vendor?.name || '' };
+            }
+          }
+        }
+      }
+      // Take first barter summary
+      let firstBarter: { traderName: string; required: Array<{ name: string; count: number }> } | null = null;
+      if (Array.isArray(it.bartersFor) && it.bartersFor.length > 0) {
+        const b = it.bartersFor[0];
+        firstBarter = {
+          traderName: b?.trader?.name || '',
+          required: Array.isArray(b?.requiredItems)
+            ? b.requiredItems.map((ri: any) => ({ name: ri?.item?.name || '', count: ri?.count || 0 }))
+            : [],
+        };
+      }
+      return {
+        id: it.id,
+        name: it.name,
+        shortName: it.shortName,
+        basePrice: it.basePrice,
+        avg24hPrice: it.avg24hPrice,
+        fleaMarketFee: it.fleaMarketFee,
+        iconLink: it.iconLink,
+        types: it.types,
+        wikiLink: it.wikiLink,
+        weight: it.weight,
+        width: it.width,
+        height: it.height,
+        categoryName: it.category?.name || null,
+        cheapestBuy: cheapest,
+        firstBarter,
+      } as CachedItem;
+    });
 
     // DBキャッシュに保存（2時間有効 - 長めの源泉キャッシュ）
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2時間後

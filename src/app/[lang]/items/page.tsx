@@ -24,6 +24,9 @@ interface Item {
   weight?: number;
   width?: number;
   height?: number;
+  categoryName?: string;
+  cheapestBuy?: { price: number; currency: string; vendorName: string } | null;
+  firstBarter?: { traderName: string; required: Array<{ name: string; count: number }> } | null;
 }
 
 async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[]; typesMode?: 'and'|'or' }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
@@ -82,6 +85,20 @@ function ItemRow({ item, lang }: { item: Item; lang: string }) {
             {item.name}
           </Link>
           <span className="text-xs text-gray-500">{item.shortName || "-"}</span>
+          <div className="text-xs text-gray-500">
+            {item.categoryName ? `${lang === 'ja' ? 'カテゴリ' : 'Category'}: ${item.categoryName}` : null}
+          </div>
+          {item.cheapestBuy && (
+            <div className="text-xs text-gray-500">
+              {lang === 'ja' ? '購入' : 'Buy'}: {item.cheapestBuy.price.toLocaleString()} {item.cheapestBuy.currency} ({item.cheapestBuy.vendorName})
+            </div>
+          )}
+          {item.firstBarter && (
+            <div className="text-xs text-gray-500">
+              {lang === 'ja' ? '物々交換' : 'Barter'}: {item.firstBarter.traderName}
+              {item.firstBarter.required && item.firstBarter.required.length > 0 ? `: ` + item.firstBarter.required.map(r => `${r.name}×${r.count}`).join(', ') : ''}
+            </div>
+          )}
         </div>
       </td>
       <td className="p-2 text-right tabular-nums">{item.basePrice?.toLocaleString?.() ?? "-"}</td>
