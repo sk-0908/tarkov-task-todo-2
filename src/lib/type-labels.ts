@@ -55,3 +55,29 @@ export function getTypeLabel(value: string, lang: 'ja' | 'en' = 'ja'): string {
   return lang === 'ja' ? fallback : fallback;
 }
 
+// Type grouping
+export const TYPE_GROUPS: Record<string, string> = {
+  ammo: 'ammo', ammobox: 'ammo',
+  weapon: 'weapon', melee: 'weapon',
+  armor: 'armor', armoredrig: 'armor', rig: 'armor', helmet: 'armor', facecover: 'armor', eyewear: 'armor', headphones: 'armor',
+  backpack: 'container', container: 'container',
+  medical: 'medical', meds: 'medical', stim: 'medical',
+  grenade: 'grenade',
+  key: 'key', keycard: 'key',
+  mod: 'mod', muzzle: 'mod', suppressor: 'mod', grip: 'mod', pistolgrip: 'mod', foregrip: 'mod', mount: 'mod', mag: 'mod', magazine: 'mod', scope: 'mod', sight: 'mod', stock: 'mod', handguard: 'mod', buttstock: 'mod', charginghandle: 'mod', gasblock: 'mod', recoilpad: 'mod',
+  barter: 'barter', barteritem: 'barter', electronics: 'barter', info: 'barter', money: 'barter', toolkit: 'barter',
+};
+
+export const GROUP_LABELS: Record<string, { ja: string; en: string }> = {
+  ammo: { ja: '弾薬', en: 'Ammo' },
+  weapon: { ja: '武器', en: 'Weapons' },
+  armor: { ja: '防具/装備', en: 'Armor/Gear' },
+  container: { ja: 'コンテナ/バッグ', en: 'Containers/Bags' },
+  medical: { ja: '医療', en: 'Medical' },
+  grenade: { ja: 'グレネード', en: 'Grenades' },
+  key: { ja: '鍵', en: 'Keys' },
+  mod: { ja: 'アタッチメント', en: 'Mods' },
+  barter: { ja: '交換/資材', en: 'Barter/Materials' },
+  other: { ja: 'その他', en: 'Other' },
+};
+

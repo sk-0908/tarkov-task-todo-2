@@ -2,7 +2,7 @@
 
 import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { getTypeLabel } from "@/lib/type-labels";
+import { getTypeLabel, TYPE_GROUPS, GROUP_LABELS } from "@/lib/type-labels";
 
 interface Props {
   lang: string;
@@ -19,9 +19,11 @@ export default function ItemsControls({ lang }: Props) {
   const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
   const page = parseInt(searchParams.get("page") || "1", 10);
   const selectedTypes = searchParams.getAll("types");
+  const selectedTypesMode = (searchParams.get("typesMode") || 'or') as 'and'|'or';
 
   const [allTypes, setAllTypes] = React.useState<string[]>([]);
   const [types, setTypes] = React.useState<string[]>(selectedTypes);
+  const [typesMode, setTypesMode] = React.useState<'and'|'or'>(selectedTypesMode);
 
   React.useEffect(() => {
     // fetch available types from cache
@@ -56,6 +58,15 @@ export default function ItemsControls({ lang }: Props) {
     // remove old
     params.delete('types');
     for (const t of next) params.append('types', t);
+    params.set('typesMode', typesMode);
+    params.set('page', '1');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const updateTypesMode = (mode: 'and'|'or') => {
+    setTypesMode(mode);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('typesMode', mode);
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -79,34 +90,65 @@ export default function ItemsControls({ lang }: Props) {
         </button>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Types multi-select */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">{lang === 'ja' ? '種別' : 'Types'}</label>
-          <div className="max-h-28 overflow-auto border rounded p-2 bg-white min-w-[200px]">
-            {allTypes.length === 0 && (
-              <div className="text-xs text-gray-500">Loading…</div>
-            )}
-            {allTypes.map((t) => {
-              const checked = types.includes(t);
-              const label = getTypeLabel(t, lang as any);
-              return (
-                <label key={t} className="block text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    checked={checked}
-                    onChange={(e) => {
-                      const next = e.target.checked ? Array.from(new Set([...types, t])) : types.filter((x) => x !== t);
-                      setTypes(next);
-                      updateTypes(next);
-                    }}
-                  />
-                  {label}
-                </label>
-              );
-            })}
+        {/* Types multi-select with grouping and AND/OR */}
+        <div className="flex items-start gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">{lang === 'ja' ? '種別' : 'Types'}</label>
+            <select value={typesMode} onChange={(e) => updateTypesMode(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
+              <option value="or">{lang === 'ja' ? 'いずれか含む(OR)' : 'Any match (OR)'}</option>
+              <option value="and">{lang === 'ja' ? 'すべて含む(AND)' : 'All match (AND)'}</option>
+            </select>
           </div>
-          <button className="text-xs text-gray-600 hover:text-gray-900" onClick={() => { setTypes([]); updateTypes([]); }}>{lang === 'ja' ? 'クリア' : 'Clear'}</button>
+          <div className="max-h-40 overflow-auto border rounded p-2 bg-white min-w-[260px]">
+            {allTypes.length === 0 && (
+              <div className="text-xs text-gray-500">{lang === 'ja' ? '読み込み中…' : 'Loading…'}</div>
+            )}
+            {(() => {
+              // build groups
+              const groups: Record<string, string[]> = {};
+              for (const t of allTypes) {
+                const g = TYPE_GROUPS[(t || '').toLowerCase()] || 'other';
+                (groups[g] ||= []).push(t);
+              }
+              const order = ['ammo','weapon','armor','container','medical','grenade','key','mod','barter','other'];
+              return order.filter((g) => groups[g]?.length).map((g) => {
+                const glabel = GROUP_LABELS[g]?.[lang as any] || g;
+                const items = groups[g].sort((a,b)=>a.localeCompare(b));
+                const allInGroup = items.every((t)=>types.includes(t));
+                return (
+                  <div key={g} className="mb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-gray-700 text-sm">{glabel}</div>
+                      <div className="space-x-2 text-xs">
+                        <button className="text-blue-600 hover:underline" onClick={() => { const next = Array.from(new Set([...types, ...items])); setTypes(next); updateTypes(next); }}>{lang==='ja'?'全選択':'Select all'}</button>
+                        <button className="text-blue-600 hover:underline" onClick={() => { const next = types.filter((t)=>!items.includes(t)); setTypes(next); updateTypes(next); }}>{lang==='ja'?'解除':'Clear'}</button>
+                      </div>
+                    </div>
+                    {items.map((t) => {
+                      const checked = types.includes(t);
+                      const label = getTypeLabel(t, lang as any);
+                      return (
+                        <label key={t} className="block text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            className="mr-2"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = e.target.checked ? Array.from(new Set([...types, t])) : types.filter((x) => x !== t);
+                              setTypes(next);
+                              updateTypes(next);
+                            }}
+                          />
+                          {label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                );
+              })
+            })()}
+          </div>
+          <button className="text-xs text-gray-600 hover:text-gray-900 mt-1" onClick={() => { setTypes([]); updateTypes([]); }}>{lang === 'ja' ? 'クリア' : 'Clear'}</button>
         </div>
 
         <label className="text-sm text-gray-600">{lang === 'ja' ? '並び替え' : 'Sort'}</label>

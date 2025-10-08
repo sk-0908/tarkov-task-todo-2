@@ -5,6 +5,7 @@ import ItemsControls from "@/components/ItemsControls";
 import { supportedLanguages, t, getLanguagePath } from "@/lib/i18n";
 import { headers } from "next/headers";
 import { getJapaneseWikiUrlByName } from "@/lib/wiki-map";
+import { getTypeLabel } from "@/lib/type-labels";
 
 export const revalidate = 600;
 
@@ -25,7 +26,7 @@ interface Item {
   height?: number;
 }
 
-async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[] }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
+async function fetchItems(language: string, params: { q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[]; typesMode?: 'and'|'or' }): Promise<{ data: Item[]; total: number; limit: number; offset: number; }> {
   // Derive base URL from request headers to avoid env drift/timeouts
   const h = headers();
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
@@ -41,6 +42,7 @@ async function fetchItems(language: string, params: { q?: string; sort?: string;
     ...(params.q ? { q: params.q } : {}),
     ...(params.sort ? { sort: params.sort } : {}),
     ...(params.order ? { order: params.order } : {}),
+    ...(params.typesMode ? { typesMode: params.typesMode } : {}),
   }).toString();
   const url = new URL(`${baseUrl}/api/cache/items?${qs}`);
   if (params.types && params.types.length > 0) {
@@ -85,7 +87,7 @@ function ItemRow({ item, lang }: { item: Item; lang: string }) {
       <td className="p-2 text-right tabular-nums">{item.basePrice?.toLocaleString?.() ?? "-"}</td>
       <td className="p-2 text-right tabular-nums">{item.avg24hPrice ? item.avg24hPrice.toLocaleString() : "-"}</td>
       <td className="p-2 text-right tabular-nums">{item.fleaMarketFee ? item.fleaMarketFee.toLocaleString() : "-"}</td>
-      <td className="p-2">{item.types?.join(", ")}</td>
+      <td className="p-2">{Array.isArray(item.types) ? item.types.map((tp) => getTypeLabel(tp, lang as any)).join(', ') : '-'}</td>
       <td className="p-2 text-right">{item.weight ?? "-"}</td>
       <td className="p-2 text-center">{size}</td>
       <td className="p-2 text-center">
@@ -104,8 +106,8 @@ function ItemRow({ item, lang }: { item: Item; lang: string }) {
   );
 }
 
-async function ItemTable({ lang, q, sort, order, page, pageSize, types }: { lang: string; q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[] }) {
-  const { data: items, total, limit, offset } = await fetchItems(lang, { q, sort, order, page, pageSize, types });
+async function ItemTable({ lang, q, sort, order, page, pageSize, types, typesMode }: { lang: string; q?: string; sort?: string; order?: string; page?: number; pageSize?: number; types?: string[]; typesMode?: 'and'|'or' }) {
+  const { data: items, total, limit, offset } = await fetchItems(lang, { q, sort, order, page, pageSize, types, typesMode });
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-8">
@@ -142,20 +144,24 @@ async function ItemTable({ lang, q, sort, order, page, pageSize, types }: { lang
           Page {currentPage} / {totalPages} • Total {total.toLocaleString()} items
         </div>
         <div className="flex gap-2">
-          <PaginationLink lang={lang} label="Prev" page={Math.max(1, currentPage - 1)} disabled={currentPage <= 1} />
-          <PaginationLink lang={lang} label="Next" page={Math.min(totalPages, currentPage + 1)} disabled={currentPage >= totalPages} />
+          <PaginationLink lang={lang} label="Prev" page={Math.max(1, currentPage - 1)} disabled={currentPage <= 1} q={q} sort={sort} order={order} pageSize={limit} types={types} typesMode={typesMode} />
+          <PaginationLink lang={lang} label="Next" page={Math.min(totalPages, currentPage + 1)} disabled={currentPage >= totalPages} q={q} sort={sort} order={order} pageSize={limit} types={types} typesMode={typesMode} />
         </div>
       </div>
     </div>
   );
 }
 
-function PaginationLink({ lang, label, page, disabled, q, sort, order, pageSize }: { lang: string; label: string; page: number; disabled?: boolean; q?: string; sort?: string; order?: string; pageSize?: number }) {
+function PaginationLink({ lang, label, page, disabled, q, sort, order, pageSize, types, typesMode }: { lang: string; label: string; page: number; disabled?: boolean; q?: string; sort?: string; order?: string; pageSize?: number; types?: string[]; typesMode?: 'and'|'or' }) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (sort) params.set('sort', sort);
   if (order) params.set('order', order);
   if (pageSize) params.set('pageSize', String(pageSize));
+  if (typesMode) params.set('typesMode', typesMode);
+  if (types && types.length) {
+    for (const tp of types) params.append('types', tp);
+  }
   params.set('page', String(page));
   const href = getLanguagePath(lang, 'items') + `?${params.toString()}`;
   if (disabled) return <span className="px-3 py-1 rounded bg-gray-100 text-gray-400 cursor-not-allowed">{label}</span>;
@@ -175,6 +181,7 @@ export default function ItemsPage({ params, searchParams }: ItemsPageProps) {
   const types = Array.isArray(searchParams.types)
     ? (searchParams.types as string[])
     : (typeof searchParams.types === 'string' ? [searchParams.types] : []);
+  const typesMode = (typeof searchParams.typesMode === 'string' && searchParams.typesMode.toLowerCase() === 'and') ? 'and' : 'or';
 
   return (
     <>
@@ -187,7 +194,7 @@ export default function ItemsPage({ params, searchParams }: ItemsPageProps) {
           </div>
           <ItemsControls lang={lang} />
           <Suspense fallback={<ItemListSkeleton />}>
-            <ItemTable lang={lang} q={q} sort={sort} order={order} page={page} pageSize={pageSize} types={types} />
+            <ItemTable lang={lang} q={q} sort={sort} order={order} page={page} pageSize={pageSize} types={types} typesMode={typesMode} />
           </Suspense>
         </div>
       </main>

@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     ).map((s) => s.trim().toLowerCase()).filter(Boolean);
     const sort = (searchParams.get('sort') || 'name').toLowerCase();
     const order = (searchParams.get('order') || 'asc').toLowerCase();
+    const typesMode = ((searchParams.get('typesMode') || 'or').toLowerCase() === 'and') ? 'and' : 'or';
     const cacheKey = getCacheKey('items', 'list', language);
     
     // DBキャッシュからデータを取得（源泉キャッシュ）
@@ -75,9 +76,14 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Types filter (OR match)
+      // Types filter (OR/AND)
       if (typesFilter.length > 0) {
-        items = items.filter((it) => Array.isArray(it.types) && it.types.some((t: string) => typesFilter.includes(String(t).toLowerCase())));
+        items = items.filter((it) => {
+          const its = Array.isArray(it.types) ? it.types.map((s: any) => String(s).toLowerCase()) : [];
+          return typesMode === 'and'
+            ? typesFilter.every((f) => its.includes(f))
+            : typesFilter.some((f) => its.includes(f));
+        });
       }
 
       // Sorting
@@ -122,7 +128,8 @@ export async function GET(request: NextRequest) {
         types: typesFilter,
         cached: true,
         cachedAt: cachedData.createdAt,
-        cacheSource: 'database'
+        cacheSource: 'database',
+        typesMode
       });
     }
 
@@ -198,6 +205,7 @@ export async function GET(request: NextRequest) {
       order,
       query: q,
       types: typesFilter,
+      typesMode,
       cached: false,
       cachedAt: new Date(),
       cacheSource: 'external'
