@@ -32,8 +32,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const language = searchParams.get('lang') || 'ja';
-    const limit = parseInt(searchParams.get('limit') || '0', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const q = (searchParams.get('q') || '').trim();
+    const sort = (searchParams.get('sort') || 'name').toLowerCase();
+    const order = (searchParams.get('order') || 'asc').toLowerCase();
     const cacheKey = getCacheKey('items', 'list', language);
     
     // DBキャッシュからデータを取得（源泉キャッシュ）
@@ -47,8 +50,62 @@ export async function GET(request: NextRequest) {
     });
 
     if (cachedData) {
+      let items: any[] = JSON.parse(cachedData.value) || [];
+
+      // Search filter (simple contains, case-insensitive)
+      if (q) {
+        const qLower = q.toLowerCase();
+        items = items.filter((it) => {
+          const hay = [
+            it.name,
+            it.shortName,
+            Array.isArray(it.types) ? it.types.join(' ') : '',
+            it.wikiLink,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return hay.includes(qLower);
+        });
+      }
+
+      // Sorting
+      const cmp = (a: any, b: any) => {
+        const dir = order === 'desc' ? -1 : 1;
+        const pick = (x: any) => {
+          switch (sort) {
+            case 'baseprice':
+              return x.basePrice ?? 0;
+            case 'avg24hprice':
+              return x.avg24hPrice ?? 0;
+            case 'weight':
+              return x.weight ?? 0;
+            case 'size':
+              return (x.width ?? 0) * (x.height ?? 0);
+            case 'name':
+            default:
+              return (x.name || '').toString().toLowerCase();
+          }
+        };
+        const va = pick(a);
+        const vb = pick(b);
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      };
+      items.sort(cmp);
+
+      const total = items.length;
+      const slice = limit > 0 ? items.slice(offset, offset + limit) : items;
+
       return NextResponse.json({
-        data: JSON.parse(cachedData.value),
+        data: slice,
+        total,
+        limit,
+        offset,
+        sort,
+        order,
+        query: q,
         cached: true,
         cachedAt: cachedData.createdAt,
         cacheSource: 'database'
@@ -116,6 +173,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: sliced,
+      total: items.length,
+      limit,
+      offset,
+      sort,
+      order,
+      query: q,
       cached: false,
       cachedAt: new Date(),
       cacheSource: 'external'
