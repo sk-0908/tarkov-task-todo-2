@@ -5,7 +5,6 @@ function getCacheKey(scope: string, resource: string, params: string, version: s
   return `cache:${scope}:${resource}:${params}:${version}`;
 }
 
-// Deprecated: kept for backward compatibility. Use /api/cache/items/categories instead.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -18,15 +17,16 @@ export async function GET(request: NextRequest) {
       items = JSON.parse(cached.value) || [];
     }
 
-    const typesSet = new Set<string>();
+    const categoriesSet = new Set<string>();
     for (const it of items) {
       if (Array.isArray(it.types)) {
-        for (const tp of it.types) typesSet.add(String(tp));
+        for (const tp of it.types) categoriesSet.add(String(tp));
       }
     }
-    const types = Array.from(typesSet).sort((a, b) => a.localeCompare(b));
-    return NextResponse.json({ types, count: types.length });
+    const categories = Array.from(categoriesSet).sort((a, b) => a.localeCompare(b));
+    return NextResponse.json({ categories, count: categories.length });
   } catch (e) {
-    return NextResponse.json({ types: [] }, { status: 200 });
+    return NextResponse.json({ categories: [] }, { status: 200 });
   }
 }
+

@@ -18,19 +18,20 @@ export default function ItemsControls({ lang }: Props) {
   const order = searchParams.get("order") || "asc";
   const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const selectedTypes = searchParams.getAll("types");
-  const selectedTypesMode = (searchParams.get("typesMode") || 'or') as 'and'|'or';
+  const selectedCategories = searchParams.getAll("category");
+  const legacyTypesSelected = searchParams.getAll("types");
+  const selectedTypesMode = (searchParams.get("categoryMode") || searchParams.get("typesMode") || 'or') as 'and'|'or';
 
   const [allTypes, setAllTypes] = React.useState<string[]>([]);
-  const [types, setTypes] = React.useState<string[]>(selectedTypes);
+  const [types, setTypes] = React.useState<string[]>(selectedCategories.length ? selectedCategories : legacyTypesSelected);
   const [typesMode, setTypesMode] = React.useState<'and'|'or'>(selectedTypesMode);
 
   React.useEffect(() => {
     // fetch available types from cache
     const controller = new AbortController();
-    fetch(`/api/cache/items/types?lang=${lang}`, { signal: controller.signal })
-      .then((res) => res.ok ? res.json() : { types: [] })
-      .then((json) => setAllTypes(json.types || []))
+    fetch(`/api/cache/items/categories?lang=${lang}`, { signal: controller.signal })
+      .then((res) => res.ok ? res.json() : { categories: [] })
+      .then((json) => setAllTypes(json.categories || []))
       .catch(() => {});
     return () => controller.abort();
   }, [lang]);
@@ -56,9 +57,10 @@ export default function ItemsControls({ lang }: Props) {
   const updateTypes = (next: string[]) => {
     const params = new URLSearchParams(searchParams.toString());
     // remove old
+    params.delete('category');
     params.delete('types');
-    for (const t of next) params.append('types', t);
-    params.set('typesMode', typesMode);
+    for (const t of next) params.append('category', t);
+    params.set('categoryMode', typesMode);
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -66,7 +68,7 @@ export default function ItemsControls({ lang }: Props) {
   const updateTypesMode = (mode: 'and'|'or') => {
     setTypesMode(mode);
     const params = new URLSearchParams(searchParams.toString());
-    params.set('typesMode', mode);
+    params.set('categoryMode', mode);
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };

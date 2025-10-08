@@ -35,14 +35,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const q = (searchParams.get('q') || '').trim();
-    const typesParams = searchParams.getAll('types');
-    const typesCsv = searchParams.get('types');
-    const typesFilter = (typesParams.length > 0
-      ? typesParams
-      : (typesCsv ? typesCsv.split(',') : [])
+    // category params (preferred) and legacy types params (backward compatible)
+    const catParams = searchParams.getAll('category');
+    const catCsv = searchParams.get('category');
+    const legacyTypesParams = searchParams.getAll('types');
+    const legacyTypesCsv = searchParams.get('types');
+    const categoriesFilter = (
+      (catParams.length > 0 ? catParams : (catCsv ? catCsv.split(',') : []))
+        .concat(legacyTypesParams.length > 0 ? legacyTypesParams : (legacyTypesCsv ? legacyTypesCsv.split(',') : []))
     ).map((s) => s.trim().toLowerCase()).filter(Boolean);
     const sort = (searchParams.get('sort') || 'name').toLowerCase();
     const order = (searchParams.get('order') || 'asc').toLowerCase();
+    const categoryMode = ((searchParams.get('categoryMode') || searchParams.get('typesMode') || 'or').toLowerCase() === 'and') ? 'and' : 'or';
     const typesMode = ((searchParams.get('typesMode') || 'or').toLowerCase() === 'and') ? 'and' : 'or';
     const cacheKey = getCacheKey('items', 'list', language);
     
@@ -76,13 +80,13 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Types filter (OR/AND)
-      if (typesFilter.length > 0) {
+      // Category filter (OR/AND)
+      if (categoriesFilter.length > 0) {
         items = items.filter((it) => {
           const its = Array.isArray(it.types) ? it.types.map((s: any) => String(s).toLowerCase()) : [];
-          return typesMode === 'and'
-            ? typesFilter.every((f) => its.includes(f))
-            : typesFilter.some((f) => its.includes(f));
+          return categoryMode === 'and'
+            ? categoriesFilter.every((f) => its.includes(f))
+            : categoriesFilter.some((f) => its.includes(f));
         });
       }
 
@@ -99,7 +103,8 @@ export async function GET(request: NextRequest) {
               return x.weight ?? 0;
             case 'size':
               return (x.width ?? 0) * (x.height ?? 0);
-            case 'types':
+            case 'types': // legacy
+            case 'category':
               return (Array.isArray(x.types) ? x.types.join(' ') : '').toLowerCase();
             case 'name':
             default:
@@ -125,11 +130,11 @@ export async function GET(request: NextRequest) {
         sort,
         order,
         query: q,
-        types: typesFilter,
+        categories: categoriesFilter,
+        categoryMode,
         cached: true,
         cachedAt: cachedData.createdAt,
         cacheSource: 'database',
-        typesMode
       });
     }
 
@@ -204,8 +209,8 @@ export async function GET(request: NextRequest) {
       sort,
       order,
       query: q,
-      types: typesFilter,
-      typesMode,
+      categories: categoriesFilter,
+      categoryMode,
       cached: false,
       cachedAt: new Date(),
       cacheSource: 'external'

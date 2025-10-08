@@ -127,7 +127,7 @@ async function ItemTable({ lang, q, sort, order, page, pageSize, types, typesMod
             <th className="p-2 text-right">Base</th>
             <th className="p-2 text-right">Avg24h</th>
             <th className="p-2 text-right">FleaFee</th>
-            <th className="p-2 text-left">Types</th>
+            <th className="p-2 text-left">{lang === 'ja' ? 'カテゴリ' : 'Category'}</th>
             <th className="p-2 text-right">Weight</th>
             <th className="p-2 text-center">Size</th>
             <th className="p-2 text-center">Wiki</th>
