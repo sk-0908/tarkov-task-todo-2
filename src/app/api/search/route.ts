@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 interface SearchResult {
   docId: string;
@@ -32,6 +33,65 @@ export async function GET(request: NextRequest) {
     const kind = searchParams.get('kind'); // 'item' | 'task' | 'trader' | 'map'
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Supabase(Postgres) 環境では ILIKE ベースの簡易検索で早期リターン
+    if ((process.env.DATABASE_URL || '').startsWith('postgres') && query && query.trim().length > 0) {
+      const sanitizedQuery = query.trim();
+      const like = `%${sanitizedQuery}%`;
+
+      const rows = await prisma.$queryRaw<any[]>`
+        SELECT 
+          docId,
+          kind,
+          language,
+          name,
+          altNames,
+          trader,
+          map,
+          content,
+          0::int as rank
+        FROM search_index
+        WHERE language = ${language}
+        ${kind ? Prisma.sql`AND kind = ${kind}` : Prisma.empty}
+          AND (
+            name ILIKE ${like} OR
+            altNames ILIKE ${like} OR
+            content ILIKE ${like}
+          )
+        ORDER BY name ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      const countRows = await prisma.$queryRaw<{ total: number }[]>`
+        SELECT COUNT(*)::int AS total
+        FROM search_index
+        WHERE language = ${language}
+        ${kind ? Prisma.sql`AND kind = ${kind}` : Prisma.empty}
+          AND (
+            name ILIKE ${like} OR
+            altNames ILIKE ${like} OR
+            content ILIKE ${like}
+          )
+      `;
+
+      const results = rows as any as SearchResult[];
+      const total = countRows?.[0]?.total || 0;
+      const formattedResults = results.map(result => ({
+        ...result,
+        altNames: result.altNames ? JSON.parse(result.altNames) : null,
+        metadata: result.metadata ? JSON.parse(result.metadata) : null,
+        rank: result.rank || 0
+      }));
+
+      return NextResponse.json({
+        query: sanitizedQuery,
+        results: formattedResults,
+        total,
+        took: Date.now() - startTime,
+        language,
+        kind: kind || 'all'
+      } as SearchResponse);
+    }
 
     if (!query || query.trim().length === 0) {
       return NextResponse.json({

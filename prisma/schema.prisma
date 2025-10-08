@@ -5,8 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Supabase(PostgreSQL) へ移行する場合は provider を postgresql にします。
+// 既存の SQLite 用 migration はそのままでは適用できないため、
+// prisma/migrations をリセットして新規に初期 migration を作成してください。
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
