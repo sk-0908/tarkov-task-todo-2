@@ -1,5 +1,6 @@
 import React from 'react';
 import { supportedLanguages, type SupportedLanguage } from '@/lib/i18n';
+import Providers from '@/app/providers';
 
 // 静的パラメータ生成
 export function generateStaticParams() {
@@ -11,14 +12,14 @@ export function generateStaticParams() {
 // 動的パラメータの検証
 
 
-export default async function LanguageLayout({
+export default function LanguageLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+  params: { lang: string };
 }) {
-  const { lang } = await params;
+  const { lang } = params;
   
   // サポートされていない言語の場合は404
   if (!supportedLanguages.includes(lang as SupportedLanguage)) {
@@ -34,7 +35,7 @@ export default async function LanguageLayout({
   return (
     <html lang={lang} dir="ltr">
       <body className="antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

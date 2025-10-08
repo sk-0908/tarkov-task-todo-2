@@ -1,6 +1,5 @@
 import React from 'react';
-import { redirect } from 'next/navigation';
-import { defaultLanguage } from '@/lib/i18n';
+// Root layout should not redirect; redirect logic lives in page.tsx
 
 export default function RootLayout({
   children,
@@ -8,7 +7,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   // ルートアクセス時はデフォルト言語にリダイレクト
-  redirect(`/${defaultLanguage}`);
+  return (
+    <html lang="ja">
+      <body className="antialiased">{children}</body>
+    </html>
+  );
 }
 
 
